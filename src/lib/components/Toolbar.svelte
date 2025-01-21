@@ -1,3 +1,8 @@
+<!--
+  Toolbar.svelte
+  This component represents a toolbar that appears above the editor when the user clicks on the toolbar icon.
+  It provides options for text formatting and AI prompt selection.
+-->
 <script>
   export let editor;
 </script>

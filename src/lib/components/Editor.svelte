@@ -1,3 +1,8 @@
+<!--
+  Editor.svelte
+  This component handles the text editor functionality, including text selection, AI text replacement, and floating menu positioning.
+  It integrates with the toolbar component and manages the editor's state and interactions.
+-->
 <script>
   import { onMount, onDestroy } from "svelte";
   import { Editor } from "@tiptap/core";
@@ -9,7 +14,9 @@
   import Underline from "@tiptap/extension-underline";
   import { writable } from "svelte/store";
   import Toolbar from "./Toolbar.svelte";
+  import FloatingMenu from "./FloatingMenu.svelte";
 
+  // Editor state variables
   let element;
   let editor;
   const isGenerating = writable(false);
@@ -17,15 +24,15 @@
   let selectedText = "";
   let showFloatingMenu = false;
   let floatingMenuPosition = { x: 0, y: 0 };
-  let selectedPrompt = "";
 
+  // AI prompt options
   const promptOptions = [
-    { value: "creative", label: "Be more creative" },
-    { value: "funny", label: "Be funny" },
-    { value: "official", label: "Be more official" },
+    { value: "creative", label: "Creative" },
+    { value: "funny", label: "Funny" },
+    { value: "official", label: "Official" },
   ];
 
-  // Initialize the editor with the necessary extensions and configurations
+  // Initialize the editor
   onMount(() => {
     editor = new Editor({
       element: element,
@@ -50,6 +57,9 @@
             selection.from,
             selection.to
           );
+          updateFloatingMenuPosition(selection);
+        } else {
+          showFloatingMenu = false;
         }
       },
     });
@@ -64,7 +74,24 @@
     }
   });
 
-  const handleAIReplace = async () => {
+  // Update floating menu position based on text selection
+  function updateFloatingMenuPosition(selection) {
+    const { ranges } = selection;
+    if (ranges.length > 0) {
+      const { $from } = ranges[0];
+      const start = $from.pos;
+      const dom = editor.view.domAtPos(start);
+      const rect = dom.node.getBoundingClientRect();
+      floatingMenuPosition = {
+        x: rect.left,
+        y: rect.top - 40, // Position the menu above the selected text
+      };
+    }
+    showFloatingMenu = true;
+  }
+
+  // Handle AI text replacement
+  const handleAIReplace = async (promptType) => {
     if (!editor || !hasSelection) return;
 
     const selection = editor.state.selection;
@@ -88,7 +115,7 @@
         body: JSON.stringify({
           text: selectedText,
           context: paragraph,
-          promptType: selectedPrompt,
+          promptType: promptType,
         }),
       });
 
@@ -98,7 +125,6 @@
       const data = await response.json();
 
       // Get the marks from the selected text
-      const selection = editor.state.selection;
       const selectedNode = editor.state.doc.nodeAt(selection.from);
       const marks = selectedNode ? selectedNode.marks : [];
 
@@ -122,84 +148,33 @@
     }
   };
 
-  const toggleFloatingMenu = (event) => {
-    if (!hasSelection) return;
-
-    showFloatingMenu = !showFloatingMenu;
-    if (showFloatingMenu) {
-      const rect = event.target.getBoundingClientRect();
-      floatingMenuPosition = {
-        x: rect.left,
-        y: rect.bottom + window.scrollY,
-      };
-    }
-  };
-
-  const handlePromptSelect = () => {
-    showFloatingMenu = false;
-    handleAIReplace();
-  };
+  // Handle prompt selection from floating menu
+  function handlePromptSelect(event) {
+    const selectedPrompt = event.detail;
+    handleAIReplace(selectedPrompt);
+  }
 </script>
 
 <div class="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-lg">
+  <!-- Toolbar component -->
   <Toolbar {editor} />
 
-  <button
-    on:click={toggleFloatingMenu}
-    class="mb-6 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-200 ease-in-out
-        {!hasSelection || $isGenerating
-      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-      : 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer shadow-md hover:shadow-lg'}"
-    disabled={!hasSelection || $isGenerating}
-  >
-    <span class="flex items-center justify-center gap-2">
-      {#if $isGenerating}
-        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-            fill="none"
-          />
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
-        Generating...
-      {:else}
-        Regenerate with AI
-      {/if}
-    </span>
-  </button>
-
-  {#if showFloatingMenu}
-    <div
-      class="absolute z-10 bg-white shadow-lg rounded-lg p-2 border border-gray-200"
-      style="left: {floatingMenuPosition.x}px; top: {floatingMenuPosition.y}px;"
-    >
-      <select
-        bind:value={selectedPrompt}
-        on:change={handlePromptSelect}
-        class="w-full p-2 border rounded"
-      >
-        <option value="" disabled selected>Select a prompt</option>
-        {#each promptOptions as option}
-          <option value={option.value}>{option.label}</option>
-        {/each}
-      </select>
-    </div>
-  {/if}
-
+  <!-- Editor content area -->
   <div
     bind:this={element}
     class="border border-gray-200 rounded-lg p-6 min-h-[300px] focus-within:border-indigo-400 transition-colors duration-200
         prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none shadow-inner bg-gray-50"
   />
+
+  <!-- Floating menu for text formatting and AI generation -->
+  {#if showFloatingMenu}
+    <FloatingMenu
+      position={floatingMenuPosition}
+      {editor}
+      {promptOptions}
+      on:promptSelect={handlePromptSelect}
+    />
+  {/if}
 </div>
 
 <style>
