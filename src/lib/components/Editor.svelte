@@ -1,8 +1,3 @@
-<!--
-  Editor.svelte
-  This component handles the text editor functionality, including text selection, AI text replacement, and floating menu positioning.
-  It integrates with the toolbar component and manages the editor's state and interactions.
--->
 <script>
   import { onMount, onDestroy } from "svelte";
   import { Editor } from "@tiptap/core";
@@ -12,8 +7,8 @@
   import { Color } from "@tiptap/extension-color";
   import { TextAlign } from "@tiptap/extension-text-align";
   import Underline from "@tiptap/extension-underline";
-  import { isGenerating, hasSelection } from "../../stores/editor";
-  import { generateTextWithLLM } from "../../utils/llmApi";
+  import { isGenerating, hasSelection } from "../../stores/editor.js";
+  import { generateTextWithLLM } from "../../utils/llmApi.js";
   import Toolbar from "./Toolbar.svelte";
   import FloatingMenu from "./FloatingMenu.svelte";
 
@@ -24,7 +19,7 @@
   let showFloatingMenu = false;
   let floatingMenuPosition = { x: 0, y: 0 };
 
-  // AI prompt options
+  // AI prompt options for floating menu
   const promptOptions = [
     { value: "creative", label: "Creative" },
     { value: "funny", label: "Funny" },
@@ -79,14 +74,32 @@
     if (ranges.length > 0) {
       const { $from } = ranges[0];
       const start = $from.pos;
-      const dom = editor.view.domAtPos(start);
-      const rect = dom.node.getBoundingClientRect();
-      floatingMenuPosition = {
-        x: rect.left,
-        y: rect.top - 40, // Position the menu above the selected text
-      };
+      const domResult = editor.view.domAtPos(start);
+
+      // Check if domResult.node is an actual DOM node
+      if (
+        domResult &&
+        domResult.node &&
+        domResult.node.nodeType === Node.ELEMENT_NODE
+      ) {
+        const rect = domResult.node.getBoundingClientRect();
+        floatingMenuPosition = {
+          x: rect.left,
+          y: rect.top - 40, // Position the menu above the selected text
+        };
+        showFloatingMenu = true;
+      } else {
+        // If we can't get a valid DOM node, use the editor's root DOM node
+        const editorRect = editor.view.dom.getBoundingClientRect();
+        floatingMenuPosition = {
+          x: editorRect.left,
+          y: editorRect.top,
+        };
+        showFloatingMenu = true;
+      }
+    } else {
+      showFloatingMenu = false;
     }
-    showFloatingMenu = true;
   }
 
   // Handle AI text replacement
@@ -138,12 +151,29 @@
 
   // Handle prompt selection from floating menu
   function handlePromptSelect(event) {
-    const selectedPrompt = event.detail;
+    let selectedPrompt;
+    if (!event.detail) {
+      selectedPrompt = "default";
+    }
+    selectedPrompt = event.detail;
     handleAIReplace(selectedPrompt);
   }
 </script>
 
 <div class="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-lg">
+  <!-- Generate Text button -->
+  <div class="mb-4">
+    <div class="mb-4">
+      <button
+        on:click={handleAIReplace}
+        disabled={$isGenerating || !$hasSelection}
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {$isGenerating ? "Generating..." : "Generate Text"}
+      </button>
+    </div>
+  </div>
+
   <!-- Toolbar component -->
   <Toolbar {editor} />
 
