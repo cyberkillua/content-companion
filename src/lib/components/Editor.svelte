@@ -12,15 +12,14 @@
   import { Color } from "@tiptap/extension-color";
   import { TextAlign } from "@tiptap/extension-text-align";
   import Underline from "@tiptap/extension-underline";
-  import { writable } from "svelte/store";
+  import { isGenerating, hasSelection } from "../../stores/editor";
+  import { generateTextWithLLM } from "../../utils/llmApi";
   import Toolbar from "./Toolbar.svelte";
   import FloatingMenu from "./FloatingMenu.svelte";
 
   // Editor state variables
   let element;
   let editor;
-  const isGenerating = writable(false);
-  let hasSelection = false;
   let selectedText = "";
   let showFloatingMenu = false;
   let floatingMenuPosition = { x: 0, y: 0 };
@@ -51,8 +50,8 @@
       content: "<p>Highlight text and click for AI-generated suggestions.</p>",
       onSelectionUpdate: ({ editor }) => {
         const selection = editor.state.selection;
-        hasSelection = !selection.empty;
-        if (hasSelection) {
+        hasSelection.set(!selection.empty);
+        if ($hasSelection) {
           selectedText = editor.state.doc.textBetween(
             selection.from,
             selection.to
@@ -92,7 +91,7 @@
 
   // Handle AI text replacement
   const handleAIReplace = async (promptType) => {
-    if (!editor || !hasSelection) return;
+    if (!editor || !$hasSelection) return;
 
     const selection = editor.state.selection;
     const selectedText = editor.state.doc.textBetween(
@@ -107,22 +106,11 @@
     isGenerating.set(true);
 
     try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: selectedText,
-          context: paragraph,
-          promptType: promptType,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
+      const data = await generateTextWithLLM(
+        selectedText,
+        paragraph,
+        promptType
+      );
 
       // Get the marks from the selected text
       const selectedNode = editor.state.doc.nodeAt(selection.from);
