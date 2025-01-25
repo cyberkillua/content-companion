@@ -12,28 +12,25 @@
   import Toolbar from "./Toolbar.svelte";
   import FloatingMenu from "./FloatingMenu.svelte";
 
-  // Editor state variables
   let element;
   let editor;
   let selectedText = "";
   let showFloatingMenu = false;
   let floatingMenuPosition = { x: 0, y: 0 };
 
-  // AI prompt options for floating menu
   const promptOptions = [
-    { value: "creative", label: "Creative" },
-    { value: "funny", label: "Funny" },
-    { value: "official", label: "Official" },
+    { value: "tweet", label: "Make into Tweet" },
+    { value: "linkedin", label: "Make into LinkedIn Post" },
+    { value: "grammar", label: "Fix Grammar" },
   ];
 
-  // Initialize the editor
   onMount(() => {
     editor = new Editor({
       element: element,
       extensions: [
         StarterKit,
         Placeholder.configure({
-          placeholder: "Start typing here...",
+          placeholder: "Start writing here...",
         }),
         TextStyle,
         Color,
@@ -42,67 +39,62 @@
         }),
         Underline,
       ],
-      content: "<p>Highlight text and click for AI-generated suggestions.</p>",
+      content:
+        "<p>Select text and choose an AI action from the floating menu.</p>",
       onSelectionUpdate: ({ editor }) => {
         const selection = editor.state.selection;
         hasSelection.set(!selection.empty);
-        if ($hasSelection) {
-          selectedText = editor.state.doc.textBetween(
-            selection.from,
-            selection.to
-          );
-          updateFloatingMenuPosition(selection);
-        } else {
+        if (selection.empty) {
           showFloatingMenu = false;
+          return;
         }
+
+        selectedText = editor.state.doc.textBetween(
+          selection.from,
+          selection.to
+        );
+        updateFloatingMenuPosition(selection);
       },
     });
 
     return () => editor.destroy();
   });
 
-  // Clean up the editor when the component is destroyed
   onDestroy(() => {
-    if (editor) {
-      editor.destroy();
-    }
+    if (editor) editor.destroy();
   });
 
-  // Update floating menu position based on text selection
   function updateFloatingMenuPosition(selection) {
-    const { ranges } = selection;
-    if (ranges.length > 0) {
-      const { $from } = ranges[0];
-      const start = $from.pos;
-      const domResult = editor.view.domAtPos(start);
+    const { from, to } = selection;
+    const start = editor.view.coordsAtPos(from);
+    const end = editor.view.coordsAtPos(to);
+    const editorRect = editor.view.dom.getBoundingClientRect();
 
-      // Check if domResult.node is an actual DOM node
-      if (
-        domResult &&
-        domResult.node &&
-        domResult.node.nodeType === Node.ELEMENT_NODE
-      ) {
-        const rect = domResult.node.getBoundingClientRect();
-        floatingMenuPosition = {
-          x: rect.left,
-          y: rect.top - 40, // Position the menu above the selected text
-        };
-        showFloatingMenu = true;
-      } else {
-        // If we can't get a valid DOM node, use the editor's root DOM node
-        const editorRect = editor.view.dom.getBoundingClientRect();
-        floatingMenuPosition = {
-          x: editorRect.left,
-          y: editorRect.top,
-        };
-        showFloatingMenu = true;
-      }
-    } else {
-      showFloatingMenu = false;
+    console.log(editorRect, "editorRect");
+    console.log(start, "start");
+    console.log(end, "end");
+    floatingMenuPosition = {
+      x: Math.min(start.left, end.left) - editorRect.left,
+      y: Math.min(start.top, end.top) - editorRect.top + 100,
+    };
+
+    // Ensure the menu doesn't go off-screen to the left or right
+    const floatingMenuWidth = 200; // Approximate width of the floating menu
+    if (floatingMenuPosition.x < 0) {
+      floatingMenuPosition.x = 0;
+    } else if (floatingMenuPosition.x + floatingMenuWidth > editorRect.width) {
+      floatingMenuPosition.x = editorRect.width - floatingMenuWidth;
     }
+
+    // Ensure the menu doesn't go above the editor
+    if (floatingMenuPosition.y < 0) {
+      floatingMenuPosition.y =
+        Math.min(start.bottom, end.bottom) - editorRect.top + 10;
+    }
+
+    showFloatingMenu = true;
   }
 
-  // Handle AI text replacement
   const handleAIReplace = async (promptType) => {
     if (!editor || !$hasSelection) return;
 
@@ -124,100 +116,93 @@
         paragraph,
         promptType
       );
-
-      // Get the marks from the selected text
       const selectedNode = editor.state.doc.nodeAt(selection.from);
       const marks = selectedNode ? selectedNode.marks : [];
-
-      // Create new text node with the same marks
       const newTextNode = editor.schema.text(data.result, marks);
 
-      // Replace the selected text with the formatted generated content
-      const transaction = editor.state.tr.replaceWith(
-        selection.from,
-        selection.to,
-        newTextNode
+      editor.view.dispatch(
+        editor.state.tr.replaceWith(selection.from, selection.to, newTextNode)
       );
-
-      editor.view.dispatch(transaction);
     } catch (error) {
-      console.error("Error with AI generation:", error);
-      alert("An error occurred while generating text. Please try again.");
+      console.error("AI generation error:", error);
+      alert("Generation failed. Please try again.");
     } finally {
       isGenerating.set(false);
       showFloatingMenu = false;
     }
   };
 
-  // Handle prompt selection from floating menu
   function handlePromptSelect(event) {
-    let selectedPrompt;
-    if (!event.detail) {
-      selectedPrompt = "default";
-    }
-    selectedPrompt = event.detail;
-    handleAIReplace(selectedPrompt);
+    handleAIReplace(event.detail);
   }
 </script>
 
-<div class="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-  <!-- Generate Text button -->
-  <div class="mb-4">
-    <div class="mb-4">
+<div class="editor-container">
+  <div class="toolbar-wrapper border-b border-gray-200 p-3">
+    <div class="flex items-center justify-between">
+      {#if editor}
+        <Toolbar {editor} />
+      {/if}
       <button
-        on:click={handleAIReplace}
+        on:click={() => handleAIReplace()}
         disabled={$isGenerating || !$hasSelection}
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="ai-enhance-btn"
       >
-        {$isGenerating ? "Generating..." : "Generate Text"}
+        {$isGenerating ? "Generating..." : "AI Enhance"}
       </button>
     </div>
   </div>
 
-  <!-- Toolbar component -->
-  <Toolbar {editor} />
-
-  <!-- Editor content area -->
-  <div
-    bind:this={element}
-    class="border border-gray-200 rounded-lg p-6 min-h-[300px] focus-within:border-indigo-400 transition-colors duration-200
-        prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none shadow-inner bg-gray-50"
-  />
-
-  <!-- Floating menu for text formatting and AI generation -->
-  {#if showFloatingMenu}
-    <FloatingMenu
-      position={floatingMenuPosition}
-      {editor}
-      {promptOptions}
-      on:promptSelect={handlePromptSelect}
-    />
-  {/if}
+  <div class="relative">
+    <div bind:this={element} class="prose-editor"></div>
+    {#if showFloatingMenu}
+      <FloatingMenu
+        position={floatingMenuPosition}
+        {editor}
+        {promptOptions}
+        on:promptSelect={handlePromptSelect}
+      />
+    {/if}
+  </div>
 </div>
 
 <style>
-  :global(.ProseMirror) {
-    @apply outline-none;
+  .editor-container {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background-color: white;
+    padding: 5px;
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
 
-  :global(.ProseMirror p.is-editor-empty:first-child::before) {
-    @apply text-gray-400 float-left h-0 pointer-events-none;
-    content: attr(data-placeholder);
+  .ai-enhance-btn {
+    padding: 0.5rem 1rem;
+    background-color: #0ea5e9;
+    color: white;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition-property: background-color;
+    transition-duration: 150ms;
   }
 
-  :global(.prose) {
-    @apply text-gray-800;
+  .ai-enhance-btn:hover {
+    background-color: #0284c7;
   }
 
-  :global(.prose p) {
-    @apply mb-4;
+  .ai-enhance-btn:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.5);
   }
 
-  :global(.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6) {
-    @apply text-indigo-900 font-bold;
-  }
-
-  :global(.prose a) {
-    @apply text-indigo-600 hover:text-indigo-800 transition-colors duration-200;
+  .prose-editor {
+    padding: 1.5rem;
+    min-height: 500px;
+    color: #1f2937;
+    max-width: none;
   }
 </style>

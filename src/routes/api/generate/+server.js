@@ -1,7 +1,8 @@
 import OpenAI from "openai";
 
+const Key = process.env.OPENAI_API_KEY;
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: Key,
 });
 
 /**
@@ -17,22 +18,22 @@ export async function POST({ request }) {
 
   // Define the prompt prefix based on the selected prompt type
   let promptPrefix = "";
+  // server.js - update the switch statement
   switch (promptType) {
-    case "creative":
+    case "tweet":
       promptPrefix =
-        "Rewrite the following text in a more creative and imaginative way: ";
+        "Convert the following text into a compelling Twitter post (280 characters or less, add relevant hashtags): ";
       break;
-    case "funny":
+    case "linkedin":
       promptPrefix =
-        "Rewrite the following text to make it more humorous and entertaining: ";
+        "Convert this text into a professional LinkedIn post (include appropriate keywords and emojis if suitable): ";
       break;
-    case "official":
+    case "grammar":
       promptPrefix =
-        "Rewrite the following text in a more formal and professional tone: ";
+        "Correct the grammar, spelling, and punctuation in this text while maintaining its original meaning and tone: ";
       break;
     default:
-      promptPrefix =
-        "Rewrite the following text, maintaining its context and style: ";
+      promptPrefix = "Improve and enhance the following text: ";
   }
 
   // Construct the prompt with the selected prompt type and context

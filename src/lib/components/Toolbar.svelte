@@ -1,57 +1,78 @@
-<!--
-  Toolbar.svelte
-  This component represents a toolbar that appears above the editor when the user clicks on the toolbar icon.
-  It provides options for text formatting and AI prompt selection.
--->
 <script>
   export let editor;
 </script>
 
-<div class="toolbar mb-4 flex flex-wrap gap-2">
+<div class="toolbar">
   <button
     on:click={() => editor.chain().focus().toggleBold().run()}
-    class="toolbar-btn">Bold</button
+    class:active={editor.isActive("bold")}
   >
+    Bold
+  </button>
   <button
     on:click={() => editor.chain().focus().toggleItalic().run()}
-    class="toolbar-btn">Italic</button
+    class:active={editor.isActive("italic")}
   >
-  <button
-    on:click={() => editor.chain().focus().toggleUnderline().run()}
-    class="toolbar-btn">Underline</button
-  >
+    Italic
+  </button>
   <button
     on:click={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-    class="toolbar-btn">H1</button
+    class:active={editor.isActive("heading", { level: 1 })}
   >
+    H1
+  </button>
   <button
     on:click={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-    class="toolbar-btn">H2</button
+    class:active={editor.isActive("heading", { level: 2 })}
   >
+    H2
+  </button>
   <button
     on:click={() => editor.chain().focus().toggleBulletList().run()}
-    class="toolbar-btn">Bullet List</button
+    class:active={editor.isActive("bulletList")}
   >
-  <button
-    on:click={() => editor.chain().focus().toggleOrderedList().run()}
-    class="toolbar-btn">Numbered List</button
-  >
+    List
+  </button>
   <button
     on:click={() => editor.chain().focus().setTextAlign("left").run()}
-    class="toolbar-btn">Left</button
+    class:active={editor.isActive({ textAlign: "left" })}
   >
+    Left
+  </button>
   <button
     on:click={() => editor.chain().focus().setTextAlign("center").run()}
-    class="toolbar-btn">Center</button
+    class:active={editor.isActive({ textAlign: "center" })}
   >
-  <button
-    on:click={() => editor.chain().focus().setTextAlign("right").run()}
-    class="toolbar-btn">Right</button
-  >
+    Center
+  </button>
 </div>
 
 <style>
-  .toolbar-btn {
-    @apply px-3 py-1 bg-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-300 transition-colors duration-200;
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  button {
+    padding: 0.375rem 0.75rem;
+    color: #4b5563;
+    border-radius: 0.375rem;
+    border: 1px solid transparent;
+    font-size: 0.875rem;
+    transition:
+      background-color 150ms,
+      color 150ms;
+  }
+
+  button:hover {
+    background-color: #f0f9ff;
+    color: #0ea5e9;
+  }
+
+  .active {
+    background-color: #e0f2fe;
+    color: #0ea5e9;
+    border-color: #bae6fd;
   }
 </style>

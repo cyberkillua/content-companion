@@ -1,20 +1,34 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply antialiased;
+    @apply antialiased font-sans bg-gray-50 text-gray-900;
+  }
+
+  .prose {
+    @apply text-gray-900;
+  }
+
+  .prose a {
+    @apply text-primary-600 hover:text-primary-700 transition-colors;
   }
 }
 
 @layer components {
   .ProseMirror {
+    @apply outline-none p-6 min-h-[500px];
+  }
+
+  .ProseMirror:focus {
     @apply outline-none;
   }
 
   .ProseMirror p.is-editor-empty:first-child::before {
-    @apply text-gray-400 float-left h-0 pointer-events-none;
+    @apply text-gray-400;
     content: attr(data-placeholder);
   }
 }
