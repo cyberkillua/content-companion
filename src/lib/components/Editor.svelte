@@ -39,8 +39,7 @@
         }),
         Underline,
       ],
-      content:
-        "<p>Select text and choose an AI action from the floating menu.</p>",
+      content: "<p>Start writing here...</p>",
       onSelectionUpdate: ({ editor }) => {
         const selection = editor.state.selection;
         hasSelection.set(!selection.empty);
@@ -70,9 +69,6 @@
     const end = editor.view.coordsAtPos(to);
     const editorRect = editor.view.dom.getBoundingClientRect();
 
-    console.log(editorRect, "editorRect");
-    console.log(start, "start");
-    console.log(end, "end");
     floatingMenuPosition = {
       x: Math.min(start.left, end.left) - editorRect.left,
       y: Math.min(start.top, end.top) - editorRect.top + 100,
@@ -138,7 +134,7 @@
 </script>
 
 <div class="editor-container">
-  <div class="toolbar-wrapper border-b border-gray-200 p-3">
+  <div class="border-b border-gray-200 p-4">
     <div class="flex items-center justify-between">
       {#if editor}
         <Toolbar {editor} />
@@ -146,7 +142,7 @@
       <button
         on:click={() => handleAIReplace()}
         disabled={$isGenerating || !$hasSelection}
-        class="ai-enhance-btn"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {$isGenerating ? "Generating..." : "AI Enhance"}
       </button>
@@ -168,41 +164,10 @@
 
 <style>
   .editor-container {
-    border: 1px solid #e5e7eb;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    background-color: white;
-    padding: 5px;
-    box-shadow:
-      0 4px 6px -1px rgb(0 0 0 / 0.1),
-      0 2px 4px -2px rgb(0 0 0 / 0.1);
-  }
-
-  .ai-enhance-btn {
-    padding: 0.5rem 1rem;
-    background-color: #0ea5e9;
-    color: white;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition-property: background-color;
-    transition-duration: 150ms;
-  }
-
-  .ai-enhance-btn:hover {
-    background-color: #0284c7;
-  }
-
-  .ai-enhance-btn:focus {
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.5);
+    @apply bg-white;
   }
 
   .prose-editor {
-    padding: 1.5rem;
-    min-height: 500px;
-    color: #1f2937;
-    max-width: none;
+    @apply p-6 min-h-[500px] text-gray-900 max-w-none;
   }
 </style>

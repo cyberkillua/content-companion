@@ -2,77 +2,76 @@
   export let editor;
 </script>
 
-<div class="toolbar">
+<div class="flex items-center space-x-2">
   <button
     on:click={() => editor.chain().focus().toggleBold().run()}
     class:active={editor.isActive("bold")}
+    class="toolbar-button"
   >
-    Bold
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      class="w-5 h-5"
+    >
+      <path
+        d="M8 11h4.5a2.5 2.5 0 1 0 0-5H8v5Zm10 4.5a4.5 4.5 0 0 1-4.5 4.5H6V4h6.5a4.5 4.5 0 0 1 3.256 7.606A4.498 4.498 0 0 1 18 15.5ZM8 13v5h5.5a2.5 2.5 0 1 0 0-5H8Z"
+      />
+    </svg>
   </button>
   <button
     on:click={() => editor.chain().focus().toggleItalic().run()}
     class:active={editor.isActive("italic")}
+    class="toolbar-button"
   >
-    Italic
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      class="w-5 h-5"
+    >
+      <path d="M15 8h-2.21l-3.58 8H11v2H7v-2h2.21l3.58-8H11V6h4v2Z" />
+    </svg>
   </button>
   <button
     on:click={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
     class:active={editor.isActive("heading", { level: 1 })}
+    class="toolbar-button"
   >
     H1
   </button>
   <button
     on:click={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
     class:active={editor.isActive("heading", { level: 2 })}
+    class="toolbar-button"
   >
     H2
   </button>
   <button
     on:click={() => editor.chain().focus().toggleBulletList().run()}
     class:active={editor.isActive("bulletList")}
+    class="toolbar-button"
   >
-    List
-  </button>
-  <button
-    on:click={() => editor.chain().focus().setTextAlign("left").run()}
-    class:active={editor.isActive({ textAlign: "left" })}
-  >
-    Left
-  </button>
-  <button
-    on:click={() => editor.chain().focus().setTextAlign("center").run()}
-    class:active={editor.isActive({ textAlign: "center" })}
-  >
-    Center
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      class="w-5 h-5"
+    >
+      <path
+        fill-rule="evenodd"
+        d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 10.5a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75ZM2 10a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75Z"
+        clip-rule="evenodd"
+      />
+    </svg>
   </button>
 </div>
 
 <style>
-  .toolbar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  .toolbar-button {
+    @apply p-2 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500;
   }
-
-  button {
-    padding: 0.375rem 0.75rem;
-    color: #4b5563;
-    border-radius: 0.375rem;
-    border: 1px solid transparent;
-    font-size: 0.875rem;
-    transition:
-      background-color 150ms,
-      color 150ms;
-  }
-
-  button:hover {
-    background-color: #f0f9ff;
-    color: #0ea5e9;
-  }
-
   .active {
-    background-color: #e0f2fe;
-    color: #0ea5e9;
-    border-color: #bae6fd;
+    @apply bg-gray-100 text-gray-900;
   }
 </style>

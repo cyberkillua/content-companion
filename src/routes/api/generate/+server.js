@@ -1,9 +1,10 @@
-import OpenAI from "openai";
+// import OpenAI from "openai";
+import Groq from "groq-sdk";
+import { configDotenv } from "dotenv";
 
-const Key = process.env.OPENAI_API_KEY;
-const openai = new OpenAI({
-  apiKey: Key,
-});
+configDotenv();
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 /**
  * This is the server-side function that handles the API route.
@@ -16,9 +17,8 @@ const openai = new OpenAI({
 export async function POST({ request }) {
   const { text, context, promptType } = await request.json();
 
-  // Define the prompt prefix based on the selected prompt type
   let promptPrefix = "";
-  // server.js - update the switch statement
+
   switch (promptType) {
     case "tweet":
       promptPrefix =
@@ -39,11 +39,12 @@ export async function POST({ request }) {
   // Construct the prompt with the selected prompt type and context
   const prompt = `${promptPrefix}"${text}". The text is part of this larger context: "${context}". 
   Ensure the rewritten text fits seamlessly into the original context but do not include the context 
-  in the answer, maintaining proper capitalization, punctuation, font style, and other stylistic elements.`;
+  in the answer, maintaining proper capitalization, punctuation, font style, and other stylistic elements.
+  DO NOT ADD EMOJIS!`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",
@@ -52,7 +53,6 @@ export async function POST({ request }) {
         },
         { role: "user", content: prompt },
       ],
-      max_tokens: 200,
     });
 
     return new Response(
