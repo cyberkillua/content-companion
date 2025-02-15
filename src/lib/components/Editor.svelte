@@ -11,6 +11,7 @@
   import { generateTextWithLLM } from "../../utils/llmApi.js";
   import Toolbar from "./Toolbar.svelte";
   import FloatingMenu from "./FloatingMenu.svelte";
+  import NotebookLines from "./NotebookLines.svelte";
 
   let element;
   let editor;
@@ -134,7 +135,7 @@
 </script>
 
 <div class="editor-container">
-  <div class="border-b border-gray-200 p-4">
+  <div class="border-b-2 border-indigo-200 p-4">
     <div class="flex items-center justify-between">
       {#if editor}
         <Toolbar {editor} />
@@ -142,7 +143,7 @@
       <button
         on:click={() => handleAIReplace()}
         disabled={$isGenerating || !$hasSelection}
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="inline-flex items-center px-4 py-2 border-2 border-indigo-600 text-lg rounded-md shadow-sm text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {$isGenerating ? "Generating..." : "AI Enhance"}
       </button>
@@ -150,6 +151,7 @@
   </div>
 
   <div class="relative">
+    <NotebookLines />
     <div bind:this={element} class="prose-editor"></div>
     {#if showFloatingMenu}
       <FloatingMenu
@@ -168,6 +170,10 @@
   }
 
   .prose-editor {
-    @apply p-6 min-h-[500px] text-gray-900 max-w-none;
+    @apply p-6 min-h-[500px] text-indigo-900 max-w-none  text-xl leading-relaxed;
+  }
+
+  :global(.ProseMirror p) {
+    @apply mb-6;
   }
 </style>
