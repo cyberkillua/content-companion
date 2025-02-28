@@ -40,7 +40,7 @@
         }),
         Underline,
       ],
-      content: "<p>Start writing here...</p>",
+      content: "",
       onSelectionUpdate: ({ editor }) => {
         const selection = editor.state.selection;
         hasSelection.set(!selection.empty);
