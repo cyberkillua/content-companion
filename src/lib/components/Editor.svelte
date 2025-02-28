@@ -20,7 +20,10 @@
   let floatingMenuPosition = { x: 0, y: 0 };
 
   const promptOptions = [
-    { value: "tweet", label: "Make into Tweet" },
+    {
+      value: "headline",
+      label: "Generate Headline",
+    },
     { value: "linkedin", label: "Make into LinkedIn Post" },
     { value: "grammar", label: "Fix Grammar" },
   ];

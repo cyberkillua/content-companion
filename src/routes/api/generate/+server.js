@@ -24,9 +24,9 @@ export async function POST({ request }) {
       promptPrefix =
         "Convert the following text into a compelling Twitter post (280 characters or less, add relevant hashtags): ";
       break;
-    case "linkedin":
+    case "headline":
       promptPrefix =
-        "Convert this text into a professional LinkedIn post (include appropriate keywords and emojis if suitable): ";
+        "Suggest compelling titles or headlines based on the full text: ";
       break;
     case "grammar":
       promptPrefix =
