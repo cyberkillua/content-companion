@@ -24,7 +24,7 @@
       value: "headline",
       label: "Generate Headline",
     },
-    { value: "linkedin", label: "Make into LinkedIn Post" },
+    { value: "seo", label: "SEO Improvment" },
     { value: "grammar", label: "Fix Grammar" },
   ];
 
